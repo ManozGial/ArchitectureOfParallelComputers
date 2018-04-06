@@ -4,7 +4,6 @@
 #include<sys/time.h>
 #include<assert.h>
 
-
 #include<xmmintrin.h> //SSE
 
 #include<emmintrin.h> //SSE2
