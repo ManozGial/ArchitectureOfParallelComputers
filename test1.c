@@ -3,11 +3,17 @@
 #include<time.h>
 #include<sys/time.h>
 #include<assert.h>
+//eisai malakas
+
 
 
 #include<xmmintrin.h> //SSE
 
 #include<emmintrin.h> //SSE2
+
+#include<xmmintrin.h>
+#include<emmintrin.h>
+
 
 
 
@@ -86,9 +92,9 @@ for(int i=0;i<N;i++)
 
 /******************************************************************************************/
 	int extra = N%4;
-	__m128 v1= __mm_set_ps1(1.0);
-	__m128 v2= __mm_set_ps1(2.0);
-	__m128 v3= __mm_set_ps1(0.01);
+	__m128 v1= _mm_set_ps1(1.0);
+	__m128 v2= _mm_set_ps1(2.0);
+	__m128 v3= _mm_set_ps1(0.01);
 
 	for(int j=0;j<iters;j++)
 	{
@@ -111,26 +117,30 @@ for(int i=0;i<N;i++)
 
 			__m128 num_0 = __mm_add_ps(L_vector, R_vector);
 
-			__m128 tmp1 =__mm_sub_ps(m_vector, v1);
-			__m128 tmp2 =__mm_mul_ps(m_vector,tmp1);
-			__m128 num_1=__mm_div_ps(tmp2, v2);
+			__m128 tmp1 =_mm_sub_ps(m_vector, v1);
+			__m128 tmp2 =_mm_mul_ps(m_vector,tmp1);
+			__m128 num_1=_mm_div_ps(tmp2, v2);
 			
-			tmp1  =__mm_sub_ps( nvector, v1);
-			tmp2  =__mm_mul_ps(n_vector,tmp1);
-			num_2 =__mm_div_ps(tmp2, v2);
+			tmp1  =_mm_sub_ps( nvector, v1);
+			tmp2  =_mm_mul_ps(n_vector,tmp1);
+			num_2 =_mm_div_ps(tmp2, v2);
 
-			__m128 tmp3 =__mm_add_ps(num_1,num_2);
-			__m128 num  =__mm_div_ps(num_0,tmp3);  
+			__m128 tmp3 =_mm_add_ps(num_1,num_2);
+			__m128 num  =_mm_div_ps(num_0,tmp3);  
 
 
-			tmp1 		 	= __mm_sub_ps(C_vector,L_vector);
-			__m128 den_0 	= __mm_sub_ps(tmp1,R_vector);
-			__m128 den_1 	= __mm_mul_ps(m_vector,n_vector);
-			__m128 den   	= __mm_div_ps(den_0,den_1);
-			tmp2 		 	= __mm_add_ps(den,v3);
-			tmp3		 	= __mm_div_ps(num,tmp2);
-			__m128 F_vector = __mm_store_ps(&FVec[i],tmp3); 
+			tmp1 		 	= _mm_sub_ps(C_vector,L_vector);
+			__m128 den_0 	= _mm_sub_ps(tmp1,R_vector);
+			__m128 den_1 	= _mm_mul_ps(m_vector,n_vector);
+			__m128 den   	= _mm_div_ps(den_0,den_1);
+			tmp2 		 	= _mm_add_ps(den,v3);
+			tmp3		 	= _mm_div_ps(num,tmp2);
+			__m128 F_vector = _mm_store_ps(&FVec[i],tmp3); 
 
+			maxF = FVec[i]>maxF?FVec[i]:maxF;
+			maxF = FVec[i+1]>maxF?FVec[i+1]:maxF;
+			maxF = FVec[i+2]>maxF?FVec[i+2]:maxF;
+			maxF = FVec[i+3]>maxF?FVec[i+3]:maxF;
 
 /*
 			float num_0 = LVec[i]+RVec[i];
@@ -143,7 +153,7 @@ for(int i=0;i<N;i++)
 			float den = den_0/den_1;
 			FVec[i] = num/(den+0.01);
 */
-			maxF = FVec[i]>maxF?FVec[i]:maxF;
+			
 		}
 /*******************************************************************************************/
 
