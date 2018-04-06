@@ -99,7 +99,7 @@ for(int i=0;i<N;i++)
 		int i =0 ;
 
 
-		for(i=0;i<N-4;i+4)
+		for(i=0;i<N-4;i+=4)
 		{	
 			//__m128 F_vector=_mm_load_ps(&FVec[i]);
 			__m128 C_vector=_mm_load_ps(&CVec[i]);
