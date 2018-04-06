@@ -115,9 +115,9 @@ for(int i=0;i<N;i++)
 			__m128 tmp2 =_mm_mul_ps(m_vector,tmp1);
 			__m128 num_1=_mm_div_ps(tmp2, v2);
 			
-			tmp1  =_mm_sub_ps( nvector, v1);
+			tmp1  =_mm_sub_ps( n_vector, v1);
 			tmp2  =_mm_mul_ps(n_vector,tmp1);
-			num_2 =_mm_div_ps(tmp2, v2);
+			__m128 num_2 =_mm_div_ps(tmp2, v2);
 
 			__m128 tmp3 =_mm_add_ps(num_1,num_2);
 			__m128 num  =_mm_div_ps(num_0,tmp3);  
@@ -129,7 +129,7 @@ for(int i=0;i<N;i++)
 			__m128 den   	= _mm_div_ps(den_0,den_1);
 			tmp2 		 	= _mm_add_ps(den,v3);
 			tmp3		 	= _mm_div_ps(num,tmp2);
-			__m128 F_vector = _mm_store_ps(&FVec[i],tmp3); 
+			_mm_store_ps(&FVec[i],tmp3); 
 
 			maxF = FVec[i]>maxF?FVec[i]:maxF;
 			maxF = FVec[i+1]>maxF?FVec[i+1]:maxF;
