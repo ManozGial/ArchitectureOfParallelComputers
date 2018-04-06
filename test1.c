@@ -109,7 +109,7 @@ for(int i=0;i<N;i++)
 			__m128 n_vector=_mm_load_ps(&nVec[i]);  
 
 
-			__m128 num_0 = __mm_add_ps(L_vector, R_vector);
+			__m128 num_0 = _mm_add_ps(L_vector, R_vector);
 
 			__m128 tmp1 =_mm_sub_ps(m_vector, v1);
 			__m128 tmp2 =_mm_mul_ps(m_vector,tmp1);
