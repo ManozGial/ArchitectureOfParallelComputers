@@ -11,9 +11,6 @@
 
 #include<emmintrin.h> //SSE2
 
-#include<xmmintrin.h>
-#include<emmintrin.h>
-
 
 
 
