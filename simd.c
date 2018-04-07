@@ -135,7 +135,7 @@ for(int i=0;i<N;i++)
 			maxF = FVec[i+2]>maxF?FVec[i+2]:maxF;
 			maxF = FVec[i+3]>maxF?FVec[i+3]:maxF;	
 		}
-		for (int z=i-3; z<N; z++){
+		for (int z=i; z<N; z++){
 			float num_0 = LVec[z]+ RVec[z];
 			float num_1 = mVec[z]*(mVec[z]-1.0)/2.0;
 			float num_2 = nVec[z]*(nVec[z]-1.0)/2.0;
