@@ -4,9 +4,6 @@
 #include<sys/time.h>
 #include<assert.h>
 
-#include<xmmintrin.h> //SSE
-
-#include<emmintrin.h> //SSE2
 
 
 
@@ -83,90 +80,22 @@ for(int i=0;i<N;i++)
 }
 	float maxF = 0.0f;
 	double timeTotal = 0.0f;
-
-/******************************************************************************************/
-	int extra = N%4;
-	__m128 v1= _mm_set_ps1(1.0);
-	__m128 v2= _mm_set_ps1(2.0);
-	__m128 v3= _mm_set_ps1(0.01);
-
 	for(int j=0;j<iters;j++)
 	{
 		double time0=gettime();
-
-		
-
-		int i =0 ;
-
-
-		for(i=0;i<N-4;i+=4)
-		{	
-			//__m128 F_vector=_mm_load_ps(&FVec[i]);
-			__m128 C_vector=_mm_load_ps(&CVec[i]);
-			__m128 L_vector=_mm_load_ps(&LVec[i]);
-			__m128 R_vector=_mm_load_ps(&RVec[i]);
-			__m128 m_vector=_mm_load_ps(&mVec[i]);
-			__m128 n_vector=_mm_load_ps(&nVec[i]);  
-
-
-			__m128 num_0 = _mm_add_ps(L_vector, R_vector);
-
-			__m128 tmp1 =_mm_sub_ps(m_vector, v1);
-			__m128 tmp2 =_mm_mul_ps(m_vector,tmp1);
-			__m128 num_1=_mm_div_ps(tmp2, v2);
-			
-			tmp1  =_mm_sub_ps( n_vector, v1);
-			tmp2  =_mm_mul_ps(n_vector,tmp1);
-			__m128 num_2 =_mm_div_ps(tmp2, v2);
-
-			__m128 tmp3 =_mm_add_ps(num_1,num_2);
-			__m128 num  =_mm_div_ps(num_0,tmp3);  
-
-
-			tmp1 		 	= _mm_sub_ps(C_vector,L_vector);
-			__m128 den_0 	= _mm_sub_ps(tmp1,R_vector);
-			__m128 den_1 	= _mm_mul_ps(m_vector,n_vector);
-			__m128 den   	= _mm_div_ps(den_0,den_1);
-			tmp2 		 	= _mm_add_ps(den,v3);
-			tmp3		 	= _mm_div_ps(num,tmp2);
-			_mm_store_ps(&FVec[i],tmp3); 
-
-			maxF = FVec[i]>maxF?FVec[i]:maxF;
-			maxF = FVec[i+1]>maxF?FVec[i+1]:maxF;
-			maxF = FVec[i+2]>maxF?FVec[i+2]:maxF;
-			maxF = FVec[i+3]>maxF?FVec[i+3]:maxF;
-
-/*
+		for(int i=0;i<N;i++)
+		{
 			float num_0 = LVec[i]+RVec[i];
 			float num_1 = mVec[i]*(mVec[i]-1.0)/2.0;
 			float num_2 = nVec[i]*(nVec[i]-1.0)/2.0;
 			float num = num_0/(num_1+num_2);
-			
 			float den_0 = CVec[i]-LVec[i]-RVec[i];
 			float den_1 = mVec[i]*nVec[i];
 			float den = den_0/den_1;
 			FVec[i] = num/(den+0.01);
+
 			maxF = FVec[i]>maxF?FVec[i]:maxF;
-*/
-			
 		}
-		for (int i=0; i<extra; i++){
-			float num_0 = LVec[i]+RVec[i];
-			float num_1 = mVec[i]*(mVec[i]-1.0)/2.0;
-			float num_2 = nVec[i]*(nVec[i]-1.0)/2.0;
-			float num = num_0/(num_1+num_2);
-			
-			float den_0 = CVec[i]-LVec[i]-RVec[i];
-			float den_1 = mVec[i]*nVec[i];
-			float den = den_0/den_1;
-			FVec[i] = num/(den+0.01);
-			maxF = FVec[i]>maxF?FVec[i]:maxF;
-			
-
-		}
-
-/*******************************************************************************************/
-
 			double time1=gettime();
 			timeTotal += time1-time0;
 	}
