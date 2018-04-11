@@ -7,7 +7,7 @@
 #include<xmmintrin.h> //SSE
 
 #include<emmintrin.h> //SSE2
-
+#include<mpi.h>
 
 
 
@@ -88,53 +88,118 @@ for(int i=0;i<N;i++)
 	__m128 v1= _mm_set_ps1(1.0);
 	__m128 v2= _mm_set_ps1(2.0);
 	__m128 v3= _mm_set_ps1(0.01);
+/*
+//Initialazing ***********ATTENTION!!!*******
+// may need to get inside loop
+*/	int world_size;
+	int world_rank;
 
+	//MPI_Init(NULL, NULL);
+	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+			
+	__m128 tmp1,tmp2,tmp3,tmp4,tmp5,tmp6,tmp7,tmp8;
+	__m128 C_vector;
+	__m128 L_vector;
+	__m128 R_vector;
+
+	__m128 num_0,num_1,num_2, num;
+	__m128 den_0,den_1,den;
+
+	__m128 m_vector;
+	__m128 n_vector;
+
+	__m128** arvec=  (__m128**)malloc(2*sizeof(__m128*));
+	__m128** arvec2= (__m128**)malloc(2*sizeof(__m128*));
+	
+	MPI_Datatype int_array;
+	MPI_Type_contiguous(5,MPI_INT,&int_array);
+	
+	
 	for(int j=0;j<iters;j++)
 	{
 		double time0=gettime();
 
 		
 
-		int i =0 ;
+		int i;
 
 
 		for(i=0;i<N-4;i+=4)
 		{	
+			if (world_rank==0){
+				 C_vector=_mm_load_ps(&CVec[i]);
+				 L_vector=_mm_load_ps(&LVec[i]);
+				 R_vector=_mm_load_ps(&RVec[i]);
+
+
+
+				num_0 = _mm_add_ps(L_vector, R_vector);
+				
+
+				tmp6 	= _mm_sub_ps(C_vector,L_vector);
+			    den_0 	= _mm_sub_ps(tmp6,R_vector);
+			    *arvec[0] = den_0;
+			    *arvec[1] = num_0;
+				MPI_Send(arvec,2,int_array,2,i,MPI_COMM_WORLD);
+			}
+			else if((world_rank==1)){
+				 m_vector=_mm_load_ps(&mVec[i]);
+				 n_vector=_mm_load_ps(&nVec[i]);  
 			
-			__m128 C_vector=_mm_load_ps(&CVec[i]);
-			__m128 L_vector=_mm_load_ps(&LVec[i]);
-			__m128 R_vector=_mm_load_ps(&RVec[i]);
-			__m128 m_vector=_mm_load_ps(&mVec[i]);
-			__m128 n_vector=_mm_load_ps(&nVec[i]);  
+
+				 tmp1 =_mm_sub_ps(m_vector, v1);
+				 tmp2 =_mm_mul_ps(m_vector,tmp1);
+				 num_1=_mm_div_ps(tmp2, v2);
 
 
-			__m128 num_0 = _mm_add_ps(L_vector, R_vector);
+				tmp3  =_mm_sub_ps( n_vector, v1);
+				tmp4  =_mm_mul_ps(n_vector,tmp3);
+				num_2 =_mm_div_ps(tmp4, v2);
 
-			__m128 tmp1 =_mm_sub_ps(m_vector, v1);
-			__m128 tmp2 =_mm_mul_ps(m_vector,tmp1);
-			__m128 num_1=_mm_div_ps(tmp2, v2);
+
+				tmp5  =_mm_add_ps(num_1,num_2);
+		
+
+				den_1 = _mm_mul_ps(m_vector,n_vector);
+				
+				*arvec2[0] = tmp5;
+			    *arvec2[1] = den_1;
+				MPI_Send(arvec,2,int_array,2,i,MPI_COMM_WORLD);
+			}
+
+
+			if(world_rank==2){
+				MPI_Recv(arvec,2,int_array,0,i,MPI_COMM_WORLD);
+				MPI_Recv(arvec2,2,int_array,1,i,MPI_COMM_WORLD);
+				tmp5=*arvec2[0];
+				den_1=*arvec2[1];
+
+				den_0=*arvec[0];
+				num_0=*arvec[1];
+
+				num  =_mm_div_ps(num_0,tmp5);
+
+				den  = _mm_div_ps(den_0,den_1);
+				tmp7 = _mm_add_ps(den,v3);
+				tmp8 = _mm_div_ps(num,tmp7);
+				_mm_store_ps(&FVec[i],tmp8); 
+
+				maxF = FVec[i]  >maxF?FVec[i]  :maxF;
+				maxF = FVec[i+1]>maxF?FVec[i+1]:maxF;
+				maxF = FVec[i+2]>maxF?FVec[i+2]:maxF;
+				maxF = FVec[i+3]>maxF?FVec[i+3]:maxF;	
+			}
 			
-			tmp3  =_mm_sub_ps( n_vector, v1);
-			tmp4  =_mm_mul_ps(n_vector,tmp3);
-			__m128 num_2 =_mm_div_ps(tmp4, v2);
-
-			__m128 tmp5 =_mm_add_ps(num_1,num_2);
-			__m128 num  =_mm_div_ps(num_0,tmp5);  
+			
 
 
-			tmp6 		 	= _mm_sub_ps(C_vector,L_vector);
-			__m128 den_0 	= _mm_sub_ps(tmp6,R_vector);
-			__m128 den_1 	= _mm_mul_ps(m_vector,n_vector);
-			__m128 den   	= _mm_div_ps(den_0,den_1);
-			tmp7 		 	= _mm_add_ps(den,v3);
-			tmp8		 	= _mm_div_ps(num,tmp7);
-			_mm_store_ps(&FVec[i],tmp8); 
+	
 
-			maxF = FVec[i]>maxF?FVec[i]:maxF;
-			maxF = FVec[i+1]>maxF?FVec[i+1]:maxF;
-			maxF = FVec[i+2]>maxF?FVec[i+2]:maxF;
-			maxF = FVec[i+3]>maxF?FVec[i+3]:maxF;	
+
 		}
+		MPI_Finalize();
+
 		for (int z=i; z<N; z++){
 			float num_0 = LVec[z]+ RVec[z];
 			float num_1 = mVec[z]*(mVec[z]-1.0)/2.0;
@@ -148,6 +213,7 @@ for(int i=0;i<N;i++)
 			maxF = FVec[z]>maxF?FVec[z]:maxF;
 		}
 
+		
 /*******************************************************************************************/
 
 			double time1=gettime();
