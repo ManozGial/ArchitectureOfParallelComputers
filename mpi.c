@@ -85,9 +85,12 @@ for(int i=0;i<N;i++)
 	double timeTotal = 0.0f;
 
 /******************************************************************************************/
-	__m128 v1= _mm_set_ps1(1.0);
-	__m128 v2= _mm_set_ps1(2.0);
-	__m128 v3= _mm_set_ps1(0.01);
+	float tmpvar =1.0;
+	__m128 v1= _mm_set1_ps(tmpvar);
+	tmpvar=2.0;
+	__m128 v2= _mm_set1_ps(tmpvar);
+	tmpvar=0.01;
+	__m128 v3= _mm_set1_ps(tmpvar);
 /*
 //Initialazing ***********ATTENTION!!!*******
 // may need to get inside loop
@@ -170,8 +173,8 @@ for(int i=0;i<N;i++)
 
 
 			if(world_rank==2){
-				MPI_Recv(arvec,2,int_array,0,i,MPI_COMM_WORLD);
-				MPI_Recv(arvec2,2,int_array,1,i,MPI_COMM_WORLD);
+				MPI_Recv(arvec,2,int_array,0,i,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				MPI_Recv(arvec2,2,int_array,1,i,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 				tmp5=*arvec2[0];
 				den_1=*arvec2[1];
 
