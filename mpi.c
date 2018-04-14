@@ -97,7 +97,7 @@ for(int i=0;i<N;i++)
 */	int world_size;
 	int world_rank;
 
-	//MPI_Init(NULL, NULL);
+	MPI_Init(NULL, NULL);
 	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 			
@@ -112,12 +112,12 @@ for(int i=0;i<N;i++)
 	__m128 m_vector;
 	__m128 n_vector;
 
-	__m128** arvec=  (__m128**)malloc(2*sizeof(__m128*));
-	__m128** arvec2= (__m128**)malloc(2*sizeof(__m128*));
+	//__m128** arvec=  (__m128**)malloc(2*sizeof(__m128*));
+	//__m128** arvec2= (__m128**)malloc(2*sizeof(__m128*));
 	
 	MPI_Datatype int_array;
-	MPI_Type_contiguous(5,MPI_INT,&int_array);
-	
+	MPI_Type_contiguous(4,MPI_FLOAT,&int_array);
+	MPI_Type_commit(&int_array);
 	
 	for(int j=0;j<iters;j++)
 	{
@@ -126,11 +126,12 @@ for(int i=0;i<N;i++)
 		
 
 		int i;
+		
 
-
-		for(i=0;i<N-4;i+=4)
+		for(i=0;i<N-4; i+=4)
 		{	
 			if (world_rank==0){
+			       // printf("mpike o core :%d (i == %d)\n",world_rank,i);
 				 C_vector=_mm_load_ps(&CVec[i]);
 				 L_vector=_mm_load_ps(&LVec[i]);
 				 R_vector=_mm_load_ps(&RVec[i]);
@@ -142,11 +143,14 @@ for(int i=0;i<N;i++)
 
 				tmp6 	= _mm_sub_ps(C_vector,L_vector);
 			    den_0 	= _mm_sub_ps(tmp6,R_vector);
-			    *arvec[0] = den_0;
-			    *arvec[1] = num_0;
-				MPI_Send(arvec,2,int_array,2,i,MPI_COMM_WORLD);
+			   // *arvec[0] = den_0;
+			    //*arvec[1] = num_0;
+				MPI_Send(&den_0 ,4 ,MPI_FLOAT ,2 ,i ,MPI_COMM_WORLD);
+				MPI_Send(&num_0 ,4 ,MPI_FLOAT ,2 ,(i+1) ,MPI_COMM_WORLD);
+			        
 			}
 			else if((world_rank==1)){
+				//printf("mpike o core :%d (i == %d)\n",world_rank,i);
 				 m_vector=_mm_load_ps(&mVec[i]);
 				 n_vector=_mm_load_ps(&nVec[i]);  
 			
@@ -166,20 +170,36 @@ for(int i=0;i<N;i++)
 
 				den_1 = _mm_mul_ps(m_vector,n_vector);
 				
-				*arvec2[0] = tmp5;
-			    *arvec2[1] = den_1;
-				MPI_Send(arvec,2,int_array,2,i,MPI_COMM_WORLD);
+			//	*arvec2[0] = tmp5;
+			 //   *arvec2[1] = den_1;
+				
+				
+				//uint64_t *val=(uint64_t*) & tmp5;
+				//printf("%.16llx %.16llx",val[1],val[0]);
+				//tmp5[3]=5.0;
+				//printf("%f %f %f %f\n",tmp5[0],tmp5[1],tmp5[2],tmp5[3]);				
+				MPI_Send(&tmp5 ,4 ,MPI_FLOAT ,2 ,(i+1) ,MPI_COMM_WORLD);
+				MPI_Send(&den_1 ,4 ,MPI_FLOAT ,2 ,i ,MPI_COMM_WORLD); 
+				
 			}
 
 
-			if(world_rank==2){
-				MPI_Recv(arvec,2,int_array,0,i,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-				MPI_Recv(arvec2,2,int_array,1,i,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-				tmp5=*arvec2[0];
-				den_1=*arvec2[1];
+			if(world_rank==2){	
+				//printf("Mpika gia receive, core : %d (i == %d)\n", world_rank,i);
+				MPI_Recv(&tmp5 ,4 ,MPI_FLOAT ,1 ,(i+1) ,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				MPI_Recv(&den_1 ,4 ,MPI_FLOAT ,1 ,i ,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				MPI_Recv(&num_0 ,4 ,MPI_FLOAT ,0 ,(i+1) ,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				MPI_Recv(&den_0 ,4 ,MPI_FLOAT ,0 ,i ,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				//printf("core: %d ekana receive	(i == %d)\n",world_rank,i);
+					
+				//uint64_t *val=(uint64_t*) & tmp5;
+				//printf("%.16llx %.16llx",val[1],val[0]);
+				//printf("%f %f %f %f(apo receive)\n",tmp5[0],tmp5[1],tmp5[2],tmp5[3]);	
+				//tmp5=*arvec2[0];
+				//den_1=*arvec2[1];
 
-				den_0=*arvec[0];
-				num_0=*arvec[1];
+				//den_0=*arvec[0];
+				//num_0=*arvec[1];
 
 				num  =_mm_div_ps(num_0,tmp5);
 
@@ -196,13 +216,14 @@ for(int i=0;i<N;i++)
 			
 			
 
-
-	
+		
+	    //   if(world_rank==3)
+	//	i+=4;
 
 
 		}
-		MPI_Finalize();
-
+		MPI_Barrier(MPI_COMM_WORLD); //gia na mhn erthei kateutheian o core 3 pou den exei na kanei tpt
+             if(world_rank==3){
 		for (int z=i; z<N; z++){
 			float num_0 = LVec[z]+ RVec[z];
 			float num_1 = mVec[z]*(mVec[z]-1.0)/2.0;
@@ -215,13 +236,23 @@ for(int i=0;i<N;i++)
 			FVec[z] = num/(den+0.01);
 			maxF = FVec[z]>maxF?FVec[z]:maxF;
 		}
+		
 
 		
 /*******************************************************************************************/
-
+			
 			double time1=gettime();
 			timeTotal += time1-time0;
-	}
+		}
+	}/// telozz tou megalou for
+		
+
+		//printf("hrtha mexri edw,core: %d\n",world_rank);
+		
+		MPI_Finalize();
+
+		//printf("meta to finalize, core: %d\n",world_rank);
+	if(world_rank==3)
 	printf("Time %f Max %f\n", timeTotal/iters, maxF);
 
 	free(mVec);
