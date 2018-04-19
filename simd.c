@@ -162,7 +162,7 @@ for(int i=0;i<N;i++)
 		maxF = maxf_vector[0]>maxf_vector[1]?maxf_vector[0]:maxf_vector[1];
 		maxF = maxf_vector[2]>maxF?maxf_vector[2]:maxF;
 		maxF = maxf_vector[3]>maxF?maxf_vector[3]:maxF;
-		
+
 		for (int z=i; z<N; z++){
 			float num_0 = LVec[z]+ RVec[z];
 			float num_1 = mVec[z]*(mVec[z]-1.0)/2.0;
