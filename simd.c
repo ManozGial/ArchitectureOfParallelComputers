@@ -90,7 +90,7 @@ for(int i=0;i<N;i++)
 	__m128 v3= _mm_set_ps1(0.01);
 	__m128 maxf_vector =_mm_set_ps1(maxF);
 	__m128 Fvector =_mm_set_ps1(0.0); 
-	__m128 zero =_mm_set_ps1(0.0);
+
 
 	__m128 num_2;
 	__m128 tmp3 ;

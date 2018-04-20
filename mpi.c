@@ -92,6 +92,10 @@ for(int i=0;i<N;i++)
 	__m128 v2= _mm_set1_ps(tmpvar);
 	tmpvar=0.01;
 	__m128 v3= _mm_set1_ps(tmpvar);
+
+	__m128 maxf_vector =_mm_set_ps1(maxF);
+	__m128 Fvector =_mm_set_ps1(0.0); 
+
 /*
 //Initialazing ***********ATTENTION!!!*******
 // may need to get inside loop
@@ -257,13 +261,11 @@ for(int i=0;i<N;i++)
 
 				den  = _mm_div_ps(den_0,den_1);
 				tmp7 = _mm_add_ps(den,v3);
-				tmp8 = _mm_div_ps(num,tmp7);
-				_mm_storeu_ps(&FVec[i],tmp8); 
+				Fvector = _mm_div_ps(num,tmp7);
+				_mm_storeu_ps(&FVec[i],Fvector);
+					
 
-				maxF = FVec[i]  >maxF?FVec[i]  :maxF;
-				maxF = FVec[i+1]>maxF?FVec[i+1]:maxF;
-				maxF = FVec[i+2]>maxF?FVec[i+2]:maxF;
-				maxF = FVec[i+3]>maxF?FVec[i+3]:maxF;	
+				maxf_vector = _mm_max_ps(Fvector, maxf_vector); 	
 			//}
 			
 			
@@ -274,6 +276,9 @@ for(int i=0;i<N;i++)
 			
 
 		}
+		maxF = maxf_vector[0]>maxf_vector[1]?maxf_vector[0]:maxf_vector[1];
+		maxF = maxf_vector[2]>maxF?maxf_vector[2]:maxF;
+		maxF = maxf_vector[3]>maxF?maxf_vector[3]:maxF;
 	//if(j==500)
 		//MPI_Barrier(MPI_COMM_WORLD); //gia na mhn erthei kateutheian o core 3 pou den exei na kanei tpt
              ///if(world_rank==2){
@@ -307,19 +312,16 @@ for(int i=0;i<N;i++)
 	}/// telozz tou megalou for
 	
 	if(world_rank==0){
+			float maxf_temp;
+			float tt_temp;
 			//MPI_Recv(&maxf0 ,4 ,MPI_FLOAT ,0 ,j ,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-			MPI_Recv(&maxf1 ,1 ,MPI_FLOAT ,1 ,1 ,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-			MPI_Recv(&maxf2 ,1 ,MPI_FLOAT ,2 ,2 ,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-			MPI_Recv(&maxf3 ,1 ,MPI_FLOAT ,3 ,3 ,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-			MPI_Recv(&tt1 ,1 ,MPI_FLOAT ,1 ,1+world_size ,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-			MPI_Recv(&tt2 ,1 ,MPI_FLOAT ,2 ,2+world_size ,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-			MPI_Recv(&tt3 ,1 ,MPI_FLOAT ,3 ,3+world_size ,MPI_COMM_WORLD,MPI_STATUS_IGNORE);		
-			maxF= maxF<maxf1?maxf1:maxF;
-			maxF= maxF<maxf2?maxf2:maxF;
-			maxF= maxF<maxf3?maxf3:maxF;
-			timeTotal= timeTotal<tt1?tt1:timeTotal;
-			timeTotal= timeTotal<tt2?tt2:timeTotal;	
-		 	timeTotal= timeTotal<tt3?tt3:timeTotal;
+			for(int i=1 ;i<world_size ;i++){
+				MPI_Recv(&maxf_temp ,1 ,MPI_FLOAT ,i ,i ,MPI_COMM_WORLD,MPI_STATUS_IGNORE);			
+				MPI_Recv(&tt_temp ,1 ,MPI_FLOAT ,i ,i+world_size ,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				maxF= maxF<maxf_temp?maxf_temp:maxF;
+				timeTotal= timeTotal<tt_temp?tt_temp:timeTotal;
+
+			}	
 			printf("Time %f Max %f\n", timeTotal/iters, maxF);
 		}
 

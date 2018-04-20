@@ -30,7 +30,7 @@ int main(int argc, char ** argv)
 	int N = atoi(argv[1]);
 	int iters = 1000;
 	srand(1);
-
+	
 	float * mVec = (float*)malloc(sizeof(float)*N);
 	assert(mVec!=NULL);
 
