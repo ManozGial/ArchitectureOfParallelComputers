@@ -6,12 +6,8 @@
 void mpi(int N)
 {	
 	MPI_Barrier(MPI_COMM_WORLD);
-	//printf("%d\n",N);
-	int iters = 1000;
 	
-	//int iters = 1000;
-
-
+	int iters = 1000;
 	float maxF = 0.0f;
 	double timeTotal = 0.0f;
 
@@ -26,17 +22,6 @@ void mpi(int N)
 	__m128 maxf_vector =_mm_set_ps1(maxF);
 	__m128 Fvector =_mm_set_ps1(0.0); 
 
-/*
-//Initialazing ***********ATTENTION!!!*******
-// may need to get inside loop
-int world_size;
-	int world_rank;
-	//int N;
-	MPI_Init(NULL, NULL);
-	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-*/	
-			
 
 	__m128 tmp1,tmp2,tmp3,tmp4,tmp5,tmp6,tmp7,tmp8;
 	__m128 C_vector;
@@ -51,7 +36,7 @@ int world_size;
 
 
 	float maxf0,maxf1,maxf2,maxf3,tt1,tt2,tt3;
-	//printf("i am core %d\n",world_rank);
+
 	int low = 0;
 	int high;
 	low = ((int)ceil((double)N/(double)  world_size))*world_rank;
@@ -68,17 +53,10 @@ int world_size;
 		
 		
 		int i;
-		
-		
-		//if(world_rank+1==world_size)
-		//high-=4;  //
-		
-		for(i=low;i <= high - 4; i+=4)
-		{	//printf("core:%d , j = %d , i = %d (low:%d ,high:%d) \n",world_rank,j,i,low,high);
-			//if (world_rank==0){
-			       // printf("mpike o core :%d (i == %d)\n",world_rank,i);printf("faaaaaak!\n");
 
-				 C_vector=_mm_loadu_ps(&CVec[i]);//printf("eftase o core %d (i = %d)\n",world_rank,i);
+		for(i=low;i <= high - 4; i+=4)
+		{	
+				 C_vector=_mm_loadu_ps(&CVec[i]);
 				 L_vector=_mm_loadu_ps(&LVec[i]);
 				 R_vector=_mm_loadu_ps(&RVec[i]);
 
@@ -89,15 +67,7 @@ int world_size;
 
 				tmp6 	= _mm_sub_ps(C_vector,L_vector);
 			        den_0 	= _mm_sub_ps(tmp6,R_vector);
-			   // *arvec[0] = den_0;
-			    //*arvec[1] = num_0;
 
-			//	MPI_Send(&den_0 ,4 ,MPI_FLOAT ,2 ,i ,MPI_COMM_WORLD);
-			//	MPI_Send(&num_0 ,4 ,MPI_FLOAT ,2 ,(i+1) ,MPI_COMM_WORLD);
-			        
-			//}
-			//else if((world_rank==1)){
-				//printf("mpike o core :%d (i == %d)\n",world_rank,i);
 				 m_vector=_mm_loadu_ps(&mVec[i]);
 				 n_vector=_mm_loadu_ps(&nVec[i]);  
 			
@@ -158,7 +128,6 @@ int world_size;
 		if((j == (iters-1)) && (world_rank!=0)){
 			time0=gettime();		
 			MPI_Send(&maxF ,1 ,MPI_FLOAT ,0 ,world_rank ,MPI_COMM_WORLD);
-			//MPI_Send(&timeTotal ,1 ,MPI_FLOAT ,0 ,world_rank+world_size ,MPI_COMM_WORLD);
 					
 		}
 
@@ -166,13 +135,11 @@ int world_size;
 	
 	if(world_rank==0){
 			float maxf_temp;
-			//float tt_temp;
 		
 			for(int i=1 ;i<world_size ;i++){
 				MPI_Recv(&maxf_temp ,1 ,MPI_FLOAT ,i ,i ,MPI_COMM_WORLD,MPI_STATUS_IGNORE);			
-				//MPI_Recv(&tt_temp ,1 ,MPI_FLOAT ,i ,i+world_size ,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 				maxF= maxF<maxf_temp?maxf_temp:maxF;
-				//timeTotal= timeTotal<tt_temp?tt_temp:timeTotal;
+				
 
 			}
 
@@ -182,6 +149,4 @@ int world_size;
 		}
 	
 	
-		
-	//MPI_Finalize();
 }
